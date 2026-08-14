@@ -1186,258 +1186,320 @@
     /* =========================================================
        REFERENCIAS
     ========================================================= */
-    const welcome = document.getElementById('welcome');
-    const welcomeCard = document.getElementById('welcomeCard');
-    const letterSection = document.getElementById('letterSection');
-    const letter = document.getElementById('letter');
-    const enterBtn = document.getElementById('enterBtn');
-    const replayBtn = document.getElementById('replayBtn');
-    const backBtn = document.getElementById('backBtn');
-
-    /* =========================================================
-       MÚSICA — DOS MELODÍAS, DOS MOMENTOS
-       Se genera con Web Audio para no depender de archivos externos.
-    ========================================================= */
-    let audioCtx = null;
-    let activeMusic = null;
-    let activeTimer = null;
-    let activePlayer = null;
-    let activeButton = null;
-    let musicToken = 0;
-
     const introMusicToggle = document.getElementById('introMusicToggle');
-    const letterMusicToggle = document.getElementById('letterMusicToggle');
-    const introMusicPlayer = document.getElementById('introMusicPlayer');
-    const letterMusicPlayer = document.getElementById('letterMusicPlayer');
-    const introAudio = document.getElementById('introAudio');
-    const letterAudio = document.getElementById('letterAudio');
+const letterMusicToggle = document.getElementById('letterMusicToggle');
+const introMusicPlayer = document.getElementById('introMusicPlayer');
+const letterMusicPlayer = document.getElementById('letterMusicPlayer');
 
-    // Melodía de bienvenida: suave, brillante y soñadora.
-    const introNotes = [
-      ['C5', .28], ['E5', .28], ['G5', .34], ['B5', .28],
-      ['A5', .30], ['G5', .30], ['E5', .38], ['D5', .28],
-      ['F5', .28], ['A5', .34], ['C6', .38], ['B5', .28],
-      ['G5', .30], ['E5', .32], ['D5', .42]
-    ];
+const introAudio = document.getElementById('introAudio');
+const letterAudio = document.getElementById('letterAudio');
 
-    // Melodía de la carta: más cálida y tranquila.
-    const letterNotes = [
-      ['C4', .42], ['E4', .42], ['G4', .52], ['E4', .38],
-      ['A4', .42], ['G4', .34], ['E4', .46], ['D4', .42],
-      ['F4', .42], ['A4', .52], ['G4', .38], ['E4', .44],
-      ['D4', .42], ['C4', .62]
-    ];
+let activeAudio = null;
+let activeMusic = null;
+let activePlayer = null;
+let activeButton = null;
 
-    const noteFreq = {
-      C4:261.63,D4:293.66,E4:329.63,F4:349.23,G4:392.00,A4:440.00,B4:493.88,
-      C5:523.25,D5:587.33,E5:659.25,F5:698.46,G5:783.99,A5:880.00,B5:987.77,C6:1046.50
-    };
 
-    function getAudioContext() {
-      if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-      if (audioCtx.state === 'suspended') audioCtx.resume();
-      return audioCtx;
+/* =========================================================
+   🎵 ARCHIVOS MP3
+   Pon estos archivos en la misma carpeta que el HTML
+========================================================= */
+
+const songs = [
+    {
+        src: "StreetPoem.mp3",
+        title: "Anuel AA - Street Poem",
+        cover: "https://xatimg.com/image/kJsEZnUXhuBL.png"
+    },
+
+    {
+        src: "Blessd.mp3",
+        title: "HOLA QUE TAL | BLESSD ❌ MYKE TOWERS",
+        cover: "https://xatimg.com/image/5adPuFd4rU15.png"
+    },
+
+    {
+        src: "BLESSDINSTAGRAM.mp3",
+        title: "INSTAGRAM | BLESSD",
+        cover: "https://xatimg.com/image/2XrMLeIOVHOQ.png"
     }
+];
 
-    function playTone(freq, start, duration, type='sine', volume=.035) {
-      const ctx = getAudioContext();
-      const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
-      const filter = ctx.createBiquadFilter();
 
-      osc.type = type;
-      osc.frequency.setValueAtTime(freq, start);
-      filter.type = 'lowpass';
-      filter.frequency.setValueAtTime(2400, start);
-      gain.gain.setValueAtTime(.0001, start);
-      gain.gain.exponentialRampToValueAtTime(volume, start + .035);
-      gain.gain.exponentialRampToValueAtTime(.0001, start + duration);
+/* =========================================================
+   🎵 REPRODUCTOR MP3
+========================================================= */
 
-      osc.connect(filter);
-      filter.connect(gain);
-      gain.connect(ctx.destination);
-      osc.start(start);
-      osc.stop(start + duration + .03);
-    }
+let currentSong = 0;
 
-    function stopMusic() {
-      musicToken++;
-      if (activeTimer) clearTimeout(activeTimer);
-      activeTimer = null;
-      if (activeAudio) {
+function stopMusic() {
+
+    if (activeAudio) {
         activeAudio.pause();
         activeAudio.currentTime = 0;
-      }
-      activeAudio = null;
-      activeMusic = null;
-      if (activePlayer) activePlayer.classList.remove('music-playing');
-      if (activeButton) activeButton.textContent = '▶';
-      activePlayer = null;
-      activeButton = null;
     }
 
-    let activeAudio = null;
+    activeAudio = null;
+    activeMusic = null;
 
-    function startMusic(name, notes, player, button, audioEl) {
-      if (activeMusic === name) {
+    if (activePlayer) {
+        activePlayer.classList.remove('music-playing');
+    }
+
+    if (activeButton) {
+        activeButton.textContent = '▶';
+    }
+
+    activePlayer = null;
+    activeButton = null;
+}
+
+
+function playSong(index, player, button) {
+
+    const song = songs[index];
+
+    stopMusic();
+
+    currentSong = index;
+
+    activeMusic = 'mp3';
+    activePlayer = player;
+    activeButton = button;
+
+    /*
+       Usamos directamente el elemento <audio>.
+       Ya NO se generan notas musicales.
+    */
+
+    const audio = new Audio(song.src);
+
+    audio.preload = "auto";
+
+    activeAudio = audio;
+
+    audio.addEventListener('ended', () => {
+
+        currentSong++;
+
+        if (currentSong >= songs.length) {
+            currentSong = 0;
+        }
+
+        playSong(currentSong, player, button);
+
+    });
+
+    audio.addEventListener('error', () => {
+
+        console.error(
+            "No se pudo reproducir el archivo MP3:",
+            song.src
+        );
+
         stopMusic();
-        return;
-      }
 
-      stopMusic();
-      activeMusic = name;
-      activePlayer = player;
-      activeButton = button;
-
-      // Si el usuario puso un MP3, usamos el MP3. Si no existe,
-      // la página conserva la melodía generada automáticamente.
-      if (audioEl && audioEl.src && !audioEl.error) {
-        activeAudio = audioEl;
-        audioEl.currentTime = 0;
-        const playPromise = audioEl.play();
-        if (playPromise) {
-          playPromise.catch(() => {
-            activeAudio = null;
-            playGeneratedMusic(name, notes, player, button);
-          });
-        }
-        player.classList.add('music-playing');
-        button.textContent = 'Ⅱ';
-        return;
-      }
-
-      playGeneratedMusic(name, notes, player, button);
-    }
-
-    function playGeneratedMusic(name, notes, player, button) {
-      getAudioContext();
-      activeMusic = name;
-      activePlayer = player;
-      activeButton = button;
-      player.classList.add('music-playing');
-      button.textContent = 'Ⅱ';
-
-      const token = musicToken;
-      const loop = () => {
-        if (token !== musicToken || activeMusic !== name) return;
-        const ctx = getAudioContext();
-        let cursor = ctx.currentTime + .08;
-
-        notes.forEach(([note, duration], i) => {
-          const freq = noteFreq[note];
-          playTone(freq, cursor, duration * .9, name === 'intro' ? 'sine' : 'triangle', name === 'intro' ? .028 : .024);
-          if (i % 2 === 0) playTone(freq / 2, cursor, duration * .75, 'sine', .009);
-          cursor += duration;
-        });
-
-        activeTimer = setTimeout(loop, (cursor - ctx.currentTime) * 1000 - 40);
-      };
-      loop();
-    }
-
-    introMusicToggle.addEventListener('click', () => {
-      startMusic('intro', introNotes, introMusicPlayer, introMusicToggle, introAudio);
     });
 
-    /* =========================================================
-       AUTOPLAY DE LA MÚSICA DE ENTRADA
-       Intentamos iniciar el MP3 inmediatamente al abrir la página.
-       Algunos navegadores móviles bloquean el audio con sonido hasta
-       que existe una interacción; en ese caso lo reintentamos en la
-       primera interacción de la página, sin exigir pulsar el reproductor.
-    ========================================================= */
-    let introAutoplayStarted = false;
+    audio.play()
+        .then(() => {
 
-    function autoplayIntroMusic() {
-      if (introAutoplayStarted || activeMusic === 'intro') return;
-      introAutoplayStarted = true;
-      startMusic('intro', introNotes, introMusicPlayer, introMusicToggle, introAudio);
-    }
+            player.classList.add('music-playing');
+            button.textContent = 'Ⅱ';
 
-    window.addEventListener('load', () => {
-      setTimeout(autoplayIntroMusic, 250);
-    });
-
-    ['pointerdown', 'touchstart', 'keydown'].forEach(eventName => {
-      window.addEventListener(eventName, () => {
-        if (activeMusic !== 'intro') {
-          introAutoplayStarted = false;
-          autoplayIntroMusic();
-        }
-      }, { once: true, passive: true });
-    });
-
-    letterMusicToggle.addEventListener('click', () => {
-      startMusic('letter', letterNotes, letterMusicPlayer, letterMusicToggle, letterAudio);
-    });
-
-
-    /* =========================================================
-       ENTRADA PRINCIPAL
-    ========================================================= */
-    enterBtn.addEventListener('click', openBirthday);
-
-    function openBirthday() {
-      enterBtn.disabled = true;
-      // La melodía de bienvenida se detiene y comienza la segunda al entrar.
-      letterMusicPlayer.style.display = 'flex';
-      startMusic('letter', letterNotes, letterMusicPlayer, letterMusicToggle, letterAudio);
-
-      gsap.timeline()
-        .to(welcomeCard, {
-          scale: .84,
-          y: 18,
-          opacity: 0,
-          duration: .65,
-          ease: 'power3.in'
         })
-        .to(welcome, {
-          opacity: 0,
-          duration: .55,
-          onComplete: () => {
-            welcome.style.display = 'none';
-            letterSection.style.display = 'block';
-            introMusicPlayer.style.display = 'none';
-            letterMusicPlayer.classList.add('show');
-            window.scrollTo(0, 0);
-            playLetterEntrance();
-            birthdayBurst();
-            startShootingStars();
-          }
-        }, '-=.15');
+        .catch(error => {
+
+            console.error(
+                "El navegador bloqueó la reproducción:",
+                error
+            );
+
+            stopMusic();
+
+        });
+}
+
+
+/* =========================================================
+   🎵 BOTÓN DE MÚSICA DE LA PORTADA
+========================================================= */
+
+introMusicToggle.addEventListener('click', () => {
+
+    if (activeMusic === 'mp3') {
+
+        stopMusic();
+
+    } else {
+
+        playSong(
+            currentSong,
+            introMusicPlayer,
+            introMusicToggle
+        );
+
     }
 
-    function playLetterEntrance() {
-      gsap.fromTo('.birthday-heading',
-        { y: -25, opacity: 0 },
-        { y: 0, opacity: 1, duration: .9, ease: 'power3.out' }
-      );
+});
 
-      gsap.fromTo('#cakeStage',
-        { y: 45, opacity: 0, scale: .92 },
-        { y: 0, opacity: 1, scale: 1, duration: 1.1, delay: .15, ease: 'back.out(1.4)' }
-      );
 
-      gsap.fromTo(letter,
-        { rotateX: 90, y: 45, opacity: 0 },
-        {
-          rotateX: 0,
-          y: 0,
-          opacity: 1,
-          duration: 1.65,
-          delay: .45,
-          ease: 'power3.out',
-          onComplete: revealLetter
+/* =========================================================
+   🎵 BOTÓN DE MÚSICA DE LA CARTA
+========================================================= */
+
+letterMusicToggle.addEventListener('click', () => {
+
+    if (activeMusic === 'mp3') {
+
+        stopMusic();
+
+    } else {
+
+        playSong(
+            currentSong,
+            letterMusicPlayer,
+            letterMusicToggle
+        );
+
+    }
+
+});
+
+
+/* =========================================================
+   🎵 AUTOPLAY
+========================================================= */
+
+let introAutoplayStarted = false;
+
+function autoplayIntroMusic() {
+
+    if (introAutoplayStarted || activeMusic === 'mp3') {
+        return;
+    }
+
+    introAutoplayStarted = true;
+
+    playSong(
+        currentSong,
+        introMusicPlayer,
+        introMusicToggle
+    );
+}
+
+
+window.addEventListener('load', () => {
+
+    setTimeout(() => {
+
+        autoplayIntroMusic();
+
+    }, 250);
+
+});
+
+
+/*
+   Si el navegador bloquea el autoplay,
+   se intenta nuevamente con la primera interacción.
+*/
+
+['pointerdown', 'touchstart', 'keydown'].forEach(eventName => {
+
+    window.addEventListener(eventName, () => {
+
+        if (!activeMusic) {
+
+            introAutoplayStarted = false;
+
+            autoplayIntroMusic();
+
         }
-      );
+
+    }, {
+        once: true,
+        passive: true
+    });
+
+});
+
+
+/* =========================================================
+   🎂 ENTRADA A LA CARTA
+========================================================= */
+
+enterBtn.addEventListener('click', openBirthday);
+
+function openBirthday() {
+
+    enterBtn.disabled = true;
+
+    letterMusicPlayer.style.display = 'flex';
+
+    /*
+       Al entrar a la carta se continúa reproduciendo
+       el mismo MP3.
+    */
+
+    if (!activeMusic) {
+
+        playSong(
+            currentSong,
+            letterMusicPlayer,
+            letterMusicToggle
+        );
+
+    } else {
+
+        activePlayer = letterMusicPlayer;
+        activeButton = letterMusicToggle;
+
+        letterMusicPlayer.classList.add('music-playing');
+        letterMusicToggle.textContent = 'Ⅱ';
+
     }
 
-    function revealLetter() {
-      gsap.fromTo('.letter-kicker, .letter-title, .letter-date, .divider, .message p, .italian-note, .signature, .letter-footer, .replay-btn',
-        { y: 18, opacity: 0 },
-        { y: 0, opacity: 1, duration: .7, stagger: .09, ease: 'power2.out' }
-      );
-    }
+
+    gsap.timeline()
+
+        .to(welcomeCard, {
+            scale: .84,
+            y: 18,
+            opacity: 0,
+            duration: .65,
+            ease: 'power3.in'
+        })
+
+        .to(welcome, {
+
+            opacity: 0,
+
+            duration: .55,
+
+            onComplete: () => {
+
+                welcome.style.display = 'none';
+
+                letterSection.style.display = 'block';
+
+                introMusicPlayer.style.display = 'none';
+
+                letterMusicPlayer.classList.add('show');
+
+                window.scrollTo(0, 0);
+
+                playLetterEntrance();
+
+                birthdayBurst();
+
+                startShootingStars();
+
+            }
+
+        }, '-=.15');
+
+}
 
     /* =========================================================
        CELEBRACIÓN: CONFETI + DESTELLOS
