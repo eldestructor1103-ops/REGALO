@@ -1212,27 +1212,27 @@
     const introAudio = document.getElementById('introAudio');
     const letterAudio = document.getElementById('letterAudio');
 
-    // Melodía de bienvenida: suave, brillante y soñadora.
-    const introNotes = [
-      ['C5', .28], ['E5', .28], ['G5', .34], ['B5', .28],
-      ['A5', .30], ['G5', .30], ['E5', .38], ['D5', .28],
-      ['F5', .28], ['A5', .34], ['C6', .38], ['B5', .28],
-      ['G5', .30], ['E5', .32], ['D5', .42]
-    ];
+ const songs = [
+    {
+        src: "BLESSDINSTAGRAM.mp3",
+        title: "INSTAGRAM | BLESSD",
+        cover: "https://xatimg.com/image/2XrMLeIOVHOQ.png"
+    }
+];
 
-    // Melodía de la carta: más cálida y tranquila.
-    const letterNotes = [
-      ['C4', .42], ['E4', .42], ['G4', .52], ['E4', .38],
-      ['A4', .42], ['G4', .34], ['E4', .46], ['D4', .42],
-      ['F4', .42], ['A4', .52], ['G4', .38], ['E4', .44],
-      ['D4', .42], ['C4', .62]
-    ];
+let currentSong = 0;
+let isPlaying = false;
 
-    const noteFreq = {
-      C4:261.63,D4:293.66,E4:329.63,F4:349.23,G4:392.00,A4:440.00,B4:493.88,
-      C5:523.25,D5:587.33,E5:659.25,F5:698.46,G5:783.99,A5:880.00,B5:987.77,C6:1046.50
-    };
+// Cargar canción + título
+function loadSong(index) {
+    audio.src = songs[index].src;
+    title.textContent = songs[index].title;
 
+        // 🔥 cambiar imagen del disco
+    cover.style.background = `
+        #000 url('${songs[index].cover}') center/cover no-repeat
+    `;
+}
     function getAudioContext() {
       if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
       if (audioCtx.state === 'suspended') audioCtx.resume();
