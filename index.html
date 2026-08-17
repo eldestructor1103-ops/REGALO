@@ -1022,7 +1022,7 @@
         </div>
         <div class="music-bars" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
         <button class="music-toggle" id="introMusicToggle" type="button" aria-label="Reproducir música">▶</button>
-        <audio id="introAudio" preload="auto" autoplay>
+        <audio id="introAudio" preload="auto">
           <source src="Happy Birthday.mp3" type="audio/mpeg">
         </audio>
   </div>
@@ -1240,13 +1240,15 @@
 
     /* =========================================================
        REPRODUCIR / PAUSAR
-       Versión corregida: si el navegador bloquea un intento
-       automático, limpiamos el estado para poder reintentarlo
-       correctamente en la primera interacción.
     ========================================================= */
     function startMusic(name, player, button, audioEl) {
 
+      /*
+         Si es la misma canción, el botón funciona únicamente
+         como pausa/reproducción.
+      */
       if (activeMusic === name && activeAudio === audioEl) {
+
         if (audioEl.paused) {
           audioEl.play().then(() => {
             player.classList.add('music-playing');
@@ -1261,9 +1263,14 @@
           button.textContent = '▶';
           button.setAttribute('aria-label', 'Reproducir música');
         }
+
         return;
       }
 
+      /*
+         Si cambia de sección, detenemos completamente
+         la canción anterior y comenzamos la nueva.
+      */
       stopMusic();
 
       activeMusic = name;
@@ -1278,20 +1285,14 @@
         button.textContent = 'Ⅱ';
         button.setAttribute('aria-label', 'Pausar música');
       }).catch(() => {
-        /* IMPORTANTE: no dejamos la canción marcada como activa
-           si el navegador rechazó el autoplay. Esto permite que
-           el siguiente toque vuelva a intentar play(). */
+        /*
+           El navegador puede bloquear el autoplay.
+           En ese caso queda lista para reproducirse
+           con el botón.
+        */
         player.classList.remove('music-playing');
         button.textContent = '▶';
         button.setAttribute('aria-label', 'Reproducir música');
-
-        if (activeAudio === audioEl) {
-          activeAudio = null;
-          activePlayer = null;
-          activeButton = null;
-          activeMusic = null;
-        }
-
         console.log('Autoplay bloqueado por el navegador.');
       });
     }
@@ -1311,60 +1312,60 @@
 
 
     /* =========================================================
-       AUTOPLAY DE LA PORTADA — HAPPY BIRTHDAY
-
-       1. Se intenta reproducir automáticamente al cargar.
-       2. Si Chrome/Edge/Safari bloquean el sonido, se vuelve
-          a intentar en la primera interacción con la página.
-       3. El intento fallido NO queda marcado como activo, por
-          lo que el reintento sí funciona.
+       AUTOPLAY DE LA ENTRADA
+       Intento inmediato al cargar la portada.
+       Si el navegador bloquea autoplay con sonido, se vuelve a
+       intentar en la primera interacción real del usuario.
     ========================================================= */
     let introAutoplayStarted = false;
 
     function autoplayIntroMusic() {
-      if (introAutoplayStarted && !introAudio.paused) return;
       if (!introAudio.paused) return;
 
-      introAutoplayStarted = true;
+      introAudio.currentTime = 0;
 
-      startMusic(
-        'intro',
-        introMusicPlayer,
-        introMusicToggle,
-        introAudio
-      );
+      introAudio.play().then(() => {
+        introAutoplayStarted = true;
+        introMusicPlayer.classList.add('music-playing');
+        introMusicToggle.textContent = 'Ⅱ';
+        introMusicToggle.setAttribute('aria-label', 'Pausar música');
 
-      /* Si play() fue rechazado, startMusic() limpia el estado. */
-      setTimeout(() => {
-        if (introAudio.paused) {
-          introAutoplayStarted = false;
-        }
-      }, 50);
+        activeAudio = introAudio;
+        activePlayer = introMusicPlayer;
+        activeButton = introMusicToggle;
+        activeMusic = 'intro';
+
+        console.log('Happy Birthday: reproducción iniciada');
+      }).catch(error => {
+        // No marcamos la canción como activa si el navegador la bloquea.
+        introAutoplayStarted = false;
+        introMusicPlayer.classList.remove('music-playing');
+        introMusicToggle.textContent = '▶';
+        introMusicToggle.setAttribute('aria-label', 'Reproducir música');
+
+        activeAudio = null;
+        activePlayer = null;
+        activeButton = null;
+        activeMusic = null;
+
+        console.log('Happy Birthday: autoplay bloqueado por el navegador.', error);
+      });
     }
 
-    /* Primer intento: al cargar la página. */
+    // Intento principal: apenas termina de cargar la página.
     window.addEventListener('load', () => {
       introAudio.load();
-      setTimeout(autoplayIntroMusic, 300);
+      setTimeout(autoplayIntroMusic, 100);
     });
 
-    /*
-       Reintento con la primera interacción en cualquier parte de
-       la portada. Esto NO obliga al navegador a permitir autoplay
-       al abrir el enlace; solamente aprovecha la primera interacción
-       cuando el navegador haya bloqueado el intento automático.
-    */
-    function resumeIntroFromInteraction() {
-      if (welcome.style.display === 'none') return;
-      if (!introAudio.paused) return;
-
-      introAutoplayStarted = false;
-      autoplayIntroMusic();
-    }
-
-    window.addEventListener('pointerdown', resumeIntroFromInteraction, { passive: true });
-    window.addEventListener('touchstart', resumeIntroFromInteraction, { passive: true });
-    window.addEventListener('keydown', resumeIntroFromInteraction);
+    // Reintento ante la primera interacción real.
+    ['pointerdown', 'touchstart', 'keydown'].forEach(eventName => {
+      window.addEventListener(eventName, () => {
+        if (welcome.style.display !== 'none' && introAudio.paused) {
+          autoplayIntroMusic();
+        }
+      }, { once: true, passive: true });
+    });
 
 
     /* =========================================================
