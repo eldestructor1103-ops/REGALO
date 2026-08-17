@@ -1195,9 +1195,7 @@
     const backBtn = document.getElementById('backBtn');
 
     /* =========================================================
-       MÚSICA — DOS TEMAS, UN SOLO BOTÓN DE PAUSA
-       Entrada: BLESSDINSTAGRAM.mp3
-       Carta:   Blessd.mp3
+       MÚSICA — HAPPY BIRTHDAY EN PORTADA + MORAT EN LA CARTA
     ========================================================= */
 
     const introMusicToggle = document.getElementById('introMusicToggle');
@@ -1211,11 +1209,13 @@
     let activePlayer = null;
     let activeButton = null;
     let activeMusic = null;
+    let introAutoplayStarted = false;
 
 
     /* =========================================================
        DETENER LA MÚSICA ACTUAL
     ========================================================= */
+
     function stopMusic() {
       if (activeAudio) {
         activeAudio.pause();
@@ -1239,145 +1239,246 @@
 
 
     /* =========================================================
-       REPRODUCIR / PAUSAR
+       REPRODUCIR HAPPY BIRTHDAY
+       - Primero intenta autoplay al cargar.
+       - Si el navegador lo bloquea, la primera interacción
+         del usuario en la portada lo desbloquea.
     ========================================================= */
-    function startMusic(name, player, button, audioEl) {
 
-      /*
-         Si es la misma canción, el botón funciona únicamente
-         como pausa/reproducción.
-      */
-      if (activeMusic === name && activeAudio === audioEl) {
+    function playIntroMusic() {
 
-        if (audioEl.paused) {
-          audioEl.play().then(() => {
-            player.classList.add('music-playing');
-            button.textContent = 'Ⅱ';
-            button.setAttribute('aria-label', 'Pausar música');
-          }).catch(() => {
-            console.log('El navegador bloqueó la reproducción.');
-          });
-        } else {
-          audioEl.pause();
-          player.classList.remove('music-playing');
-          button.textContent = '▶';
-          button.setAttribute('aria-label', 'Reproducir música');
-        }
+      if (!introAudio.paused) return;
 
-        return;
+      introAudio.volume = 1;
+      introAudio.muted = false;
+
+      const promise = introAudio.play();
+
+      if (promise !== undefined) {
+
+        promise.then(() => {
+
+          introAutoplayStarted = true;
+
+          activeAudio = introAudio;
+          activePlayer = introMusicPlayer;
+          activeButton = introMusicToggle;
+          activeMusic = 'intro';
+
+          introMusicPlayer.classList.add('music-playing');
+
+          introMusicToggle.textContent = 'Ⅱ';
+          introMusicToggle.setAttribute(
+            'aria-label',
+            'Pausar música'
+          );
+
+          console.log('🎵 Happy Birthday reproduciéndose');
+
+        }).catch(() => {
+
+          introAutoplayStarted = false;
+
+          introMusicPlayer.classList.remove('music-playing');
+
+          introMusicToggle.textContent = '▶';
+          introMusicToggle.setAttribute(
+            'aria-label',
+            'Reproducir música'
+          );
+
+          console.log(
+            '⚠️ El navegador bloqueó el autoplay. Esperando interacción.'
+          );
+        });
       }
-
-      /*
-         Si cambia de sección, detenemos completamente
-         la canción anterior y comenzamos la nueva.
-      */
-      stopMusic();
-
-      activeMusic = name;
-      activeAudio = audioEl;
-      activePlayer = player;
-      activeButton = button;
-
-      audioEl.currentTime = 0;
-
-      audioEl.play().then(() => {
-        player.classList.add('music-playing');
-        button.textContent = 'Ⅱ';
-        button.setAttribute('aria-label', 'Pausar música');
-      }).catch(() => {
-        /*
-           El navegador puede bloquear el autoplay.
-           En ese caso queda lista para reproducirse
-           con el botón.
-        */
-        player.classList.remove('music-playing');
-        button.textContent = '▶';
-        button.setAttribute('aria-label', 'Reproducir música');
-        console.log('Autoplay bloqueado por el navegador.');
-      });
     }
 
 
     /* =========================================================
-       BOTÓN DE LA MÚSICA DE ENTRADA
+       INTENTO AUTOMÁTICO AL ABRIR EL ENLACE
     ========================================================= */
-    introMusicToggle.addEventListener('click', () => {
-      startMusic(
-        'intro',
-        introMusicPlayer,
-        introMusicToggle,
-        introAudio
-      );
+
+    window.addEventListener('load', () => {
+
+      introAudio.load();
+
+      setTimeout(() => {
+        playIntroMusic();
+      }, 300);
+
     });
 
 
     /* =========================================================
-       AUTOPLAY DE LA ENTRADA
-       Intento inmediato al cargar la portada.
-       Si el navegador bloquea autoplay con sonido, se vuelve a
-       intentar en la primera interacción real del usuario.
+       DESBLOQUEO CON LA PRIMERA INTERACCIÓN
+       Si Chrome bloqueó el autoplay, cualquier toque/clic/tecla
+       en la portada inicia Happy Birthday.
     ========================================================= */
-    let introAutoplayStarted = false;
 
-    function autoplayIntroMusic() {
-      if (!introAudio.paused) return;
+    function unlockIntroAudio(event) {
 
-      introAudio.currentTime = 0;
+      if (welcome.style.display === 'none') return;
 
-      introAudio.play().then(() => {
-        introAutoplayStarted = true;
-        introMusicPlayer.classList.add('music-playing');
-        introMusicToggle.textContent = 'Ⅱ';
-        introMusicToggle.setAttribute('aria-label', 'Pausar música');
+      if (introAudio.paused) {
+        playIntroMusic();
+      }
+    }
 
-        activeAudio = introAudio;
-        activePlayer = introMusicPlayer;
-        activeButton = introMusicToggle;
-        activeMusic = 'intro';
+    document.addEventListener(
+      'pointerdown',
+      unlockIntroAudio,
+      { passive: true }
+    );
 
-        console.log('Happy Birthday: reproducción iniciada');
-      }).catch(error => {
-        // No marcamos la canción como activa si el navegador la bloquea.
-        introAutoplayStarted = false;
+    document.addEventListener(
+      'keydown',
+      unlockIntroAudio,
+      { passive: true }
+    );
+
+
+    /* =========================================================
+       BOTÓN DE HAPPY BIRTHDAY
+    ========================================================= */
+
+    introMusicToggle.addEventListener('click', (event) => {
+
+      event.stopPropagation();
+
+      if (introAudio.paused) {
+
+        playIntroMusic();
+
+      } else {
+
+        introAudio.pause();
+
         introMusicPlayer.classList.remove('music-playing');
+
         introMusicToggle.textContent = '▶';
-        introMusicToggle.setAttribute('aria-label', 'Reproducir música');
+
+        introMusicToggle.setAttribute(
+          'aria-label',
+          'Reproducir música'
+        );
 
         activeAudio = null;
         activePlayer = null;
         activeButton = null;
         activeMusic = null;
+      }
 
-        console.log('Happy Birthday: autoplay bloqueado por el navegador.', error);
-      });
-    }
-
-    // Intento principal: apenas termina de cargar la página.
-    window.addEventListener('load', () => {
-      introAudio.load();
-      setTimeout(autoplayIntroMusic, 100);
-    });
-
-    // Reintento ante la primera interacción real.
-    ['pointerdown', 'touchstart', 'keydown'].forEach(eventName => {
-      window.addEventListener(eventName, () => {
-        if (welcome.style.display !== 'none' && introAudio.paused) {
-          autoplayIntroMusic();
-        }
-      }, { once: true, passive: true });
     });
 
 
     /* =========================================================
-       BOTÓN DE LA MÚSICA DE LA CARTA
+       REPRODUCIR / PAUSAR LA CANCIÓN DE LA CARTA
     ========================================================= */
+
+    function startLetterMusic() {
+
+      stopMusic();
+
+      activeMusic = 'letter';
+      activeAudio = letterAudio;
+      activePlayer = letterMusicPlayer;
+      activeButton = letterMusicToggle;
+
+      letterAudio.currentTime = 0;
+
+      letterAudio.play().then(() => {
+
+        letterMusicPlayer.classList.add('music-playing');
+
+        letterMusicToggle.textContent = 'Ⅱ';
+        letterMusicToggle.setAttribute(
+          'aria-label',
+          'Pausar música de la carta'
+        );
+
+      }).catch(() => {
+
+        letterMusicPlayer.classList.remove('music-playing');
+
+        letterMusicToggle.textContent = '▶';
+
+        letterMusicToggle.setAttribute(
+          'aria-label',
+          'Reproducir música de la carta'
+        );
+
+        console.log('El navegador bloqueó Morat.');
+      });
+    }
+
+
     letterMusicToggle.addEventListener('click', () => {
-      startMusic(
-        'letter',
-        letterMusicPlayer,
-        letterMusicToggle,
-        letterAudio
+
+      if (activeMusic === 'letter' && activeAudio === letterAudio) {
+
+        if (letterAudio.paused) {
+
+          letterAudio.play().then(() => {
+
+            letterMusicPlayer.classList.add('music-playing');
+            letterMusicToggle.textContent = 'Ⅱ';
+
+          }).catch(() => {});
+
+        } else {
+
+          letterAudio.pause();
+
+          letterMusicPlayer.classList.remove('music-playing');
+
+          letterMusicToggle.textContent = '▶';
+        }
+
+        return;
+      }
+
+      startLetterMusic();
+    });
+
+
+    /* =========================================================
+       CUANDO TERMINA UNA CANCIÓN
+    ========================================================= */
+
+    introAudio.addEventListener('ended', () => {
+
+      introMusicPlayer.classList.remove('music-playing');
+
+      introMusicToggle.textContent = '▶';
+
+      introMusicToggle.setAttribute(
+        'aria-label',
+        'Reproducir música'
       );
+
+      activeAudio = null;
+      activePlayer = null;
+      activeButton = null;
+      activeMusic = null;
+    });
+
+
+    letterAudio.addEventListener('ended', () => {
+
+      letterMusicPlayer.classList.remove('music-playing');
+
+      letterMusicToggle.textContent = '▶';
+
+      letterMusicToggle.setAttribute(
+        'aria-label',
+        'Reproducir música de la carta'
+      );
+
+      activeAudio = null;
+      activePlayer = null;
+      activeButton = null;
+      activeMusic = null;
     });
 
 
@@ -1430,12 +1531,7 @@
          3. Comenzar automáticamente el segundo tema:
             Blessd.mp3
       */
-      startMusic(
-        'letter',
-        letterMusicPlayer,
-        letterMusicToggle,
-        letterAudio
-      );
+      startLetterMusic();
 
       /*
          4. Animación de transición.
@@ -1680,7 +1776,7 @@
          Si el navegador permite autoplay, comienza solo.
       */
       introAutoplayStarted = false;
-      setTimeout(autoplayIntroMusic, 150);
+      setTimeout(playIntroMusic, 150);
 
       gsap.fromTo(welcomeCard,
         { opacity: 0, scale: .92, y: 18 },
