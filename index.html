@@ -1317,41 +1317,40 @@
        Si el navegador bloquea el sonido, se reintenta
        en la primera interacción del usuario.
     ========================================================= */
-    let introAutoplayStarted = false;
+   let introAutoplayStarted = false;
 
-    function autoplayIntroMusic() {
-      if (introAutoplayStarted || activeMusic === 'intro') return;
+function autoplayIntroMusic() {
+  if (introAutoplayStarted || !introAudio.paused) return;
 
+  introAudio.currentTime = 0;
+
+  introAudio.play()
+    .then(() => {
       introAutoplayStarted = true;
 
-      startMusic(
-        'intro',
-        introMusicPlayer,
-        introMusicToggle,
-        introAudio
-      );
-    }
+      introMusicPlayer.classList.add('music-playing');
+      introMusicToggle.textContent = 'Ⅱ';
+      introMusicToggle.setAttribute('aria-label', 'Pausar música');
 
-    window.addEventListener('load', () => {
-      setTimeout(autoplayIntroMusic, 250);
+      activeAudio = introAudio;
+      activePlayer = introMusicPlayer;
+      activeButton = introMusicToggle;
+      activeMusic = 'intro';
+    })
+    .catch(() => {
+      // El navegador puede bloquear el autoplay.
+      // La canción queda lista para reproducirse al tocar ▶.
+      introAutoplayStarted = false;
+      introMusicPlayer.classList.remove('music-playing');
+      introMusicToggle.textContent = '▶';
     });
+}
 
-    ['pointerdown', 'touchstart', 'keydown'].forEach(eventName => {
-      window.addEventListener(eventName, () => {
-
-        /*
-           Si el navegador bloqueó el autoplay,
-           esta primera interacción inicia la música.
-           No hace falta pulsar el reproductor.
-        */
-        if (!activeAudio || activeAudio.paused) {
-          introAutoplayStarted = false;
-          autoplayIntroMusic();
-        }
-
-      }, { once: true, passive: true });
-    });
-
+window.addEventListener('load', () => {
+  setTimeout(() => {
+    autoplayIntroMusic();
+  }, 300);
+});
 
     /* =========================================================
        BOTÓN DE LA MÚSICA DE LA CARTA
