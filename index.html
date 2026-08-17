@@ -1022,7 +1022,7 @@
         </div>
         <div class="music-bars" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
         <button class="music-toggle" id="introMusicToggle" type="button" aria-label="Reproducir música">▶</button>
-        <audio id="introAudio" preload="auto">
+        <audio id="introAudio" preload="auto" autoplay>
           <source src="Happy Birthday.mp3" type="audio/mpeg">
         </audio>
   </div>
@@ -1240,15 +1240,13 @@
 
     /* =========================================================
        REPRODUCIR / PAUSAR
+       Versión corregida: si el navegador bloquea un intento
+       automático, limpiamos el estado para poder reintentarlo
+       correctamente en la primera interacción.
     ========================================================= */
     function startMusic(name, player, button, audioEl) {
 
-      /*
-         Si es la misma canción, el botón funciona únicamente
-         como pausa/reproducción.
-      */
       if (activeMusic === name && activeAudio === audioEl) {
-
         if (audioEl.paused) {
           audioEl.play().then(() => {
             player.classList.add('music-playing');
@@ -1263,14 +1261,9 @@
           button.textContent = '▶';
           button.setAttribute('aria-label', 'Reproducir música');
         }
-
         return;
       }
 
-      /*
-         Si cambia de sección, detenemos completamente
-         la canción anterior y comenzamos la nueva.
-      */
       stopMusic();
 
       activeMusic = name;
@@ -1285,14 +1278,20 @@
         button.textContent = 'Ⅱ';
         button.setAttribute('aria-label', 'Pausar música');
       }).catch(() => {
-        /*
-           El navegador puede bloquear el autoplay.
-           En ese caso queda lista para reproducirse
-           con el botón.
-        */
+        /* IMPORTANTE: no dejamos la canción marcada como activa
+           si el navegador rechazó el autoplay. Esto permite que
+           el siguiente toque vuelva a intentar play(). */
         player.classList.remove('music-playing');
         button.textContent = '▶';
         button.setAttribute('aria-label', 'Reproducir música');
+
+        if (activeAudio === audioEl) {
+          activeAudio = null;
+          activePlayer = null;
+          activeButton = null;
+          activeMusic = null;
+        }
+
         console.log('Autoplay bloqueado por el navegador.');
       });
     }
@@ -1312,45 +1311,61 @@
 
 
     /* =========================================================
-       AUTOPLAY DE LA ENTRADA
-       Se intenta automáticamente al abrir.
-       Si el navegador bloquea el sonido, se reintenta
-       en la primera interacción del usuario.
+       AUTOPLAY DE LA PORTADA — HAPPY BIRTHDAY
+
+       1. Se intenta reproducir automáticamente al cargar.
+       2. Si Chrome/Edge/Safari bloquean el sonido, se vuelve
+          a intentar en la primera interacción con la página.
+       3. El intento fallido NO queda marcado como activo, por
+          lo que el reintento sí funciona.
     ========================================================= */
-   let introAutoplayStarted = false;
+    let introAutoplayStarted = false;
 
-function autoplayIntroMusic() {
-  if (introAutoplayStarted || !introAudio.paused) return;
+    function autoplayIntroMusic() {
+      if (introAutoplayStarted && !introAudio.paused) return;
+      if (!introAudio.paused) return;
 
-  introAudio.currentTime = 0;
-
-  introAudio.play()
-    .then(() => {
       introAutoplayStarted = true;
 
-      introMusicPlayer.classList.add('music-playing');
-      introMusicToggle.textContent = 'Ⅱ';
-      introMusicToggle.setAttribute('aria-label', 'Pausar música');
+      startMusic(
+        'intro',
+        introMusicPlayer,
+        introMusicToggle,
+        introAudio
+      );
 
-      activeAudio = introAudio;
-      activePlayer = introMusicPlayer;
-      activeButton = introMusicToggle;
-      activeMusic = 'intro';
-    })
-    .catch(() => {
-      // El navegador puede bloquear el autoplay.
-      // La canción queda lista para reproducirse al tocar ▶.
-      introAutoplayStarted = false;
-      introMusicPlayer.classList.remove('music-playing');
-      introMusicToggle.textContent = '▶';
+      /* Si play() fue rechazado, startMusic() limpia el estado. */
+      setTimeout(() => {
+        if (introAudio.paused) {
+          introAutoplayStarted = false;
+        }
+      }, 50);
+    }
+
+    /* Primer intento: al cargar la página. */
+    window.addEventListener('load', () => {
+      introAudio.load();
+      setTimeout(autoplayIntroMusic, 300);
     });
-}
 
-window.addEventListener('load', () => {
-  setTimeout(() => {
-    autoplayIntroMusic();
-  }, 300);
-});
+    /*
+       Reintento con la primera interacción en cualquier parte de
+       la portada. Esto NO obliga al navegador a permitir autoplay
+       al abrir el enlace; solamente aprovecha la primera interacción
+       cuando el navegador haya bloqueado el intento automático.
+    */
+    function resumeIntroFromInteraction() {
+      if (welcome.style.display === 'none') return;
+      if (!introAudio.paused) return;
+
+      introAutoplayStarted = false;
+      autoplayIntroMusic();
+    }
+
+    window.addEventListener('pointerdown', resumeIntroFromInteraction, { passive: true });
+    window.addEventListener('touchstart', resumeIntroFromInteraction, { passive: true });
+    window.addEventListener('keydown', resumeIntroFromInteraction);
+
 
     /* =========================================================
        BOTÓN DE LA MÚSICA DE LA CARTA
