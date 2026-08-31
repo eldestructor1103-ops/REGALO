@@ -968,72 +968,6 @@
       to { height: 14px; }
     }
 
-    /* VIDEO SORPRESA */
-.video-surprise {
-  position: relative;
-  z-index: 2;
-  margin: 32px auto 0;
-  text-align: center;
-  max-width: 610px;
-}
-
-.video-surprise p {
-  margin-bottom: 15px;
-  font-family: 'Cormorant Garamond', serif;
-  font-size: 20px;
-  font-style: italic;
-  color: #9a5c7a;
-}
-
-.video-btn {
-  border: none;
-  padding: 14px 28px;
-  border-radius: 999px;
-  cursor: pointer;
-  color: white;
-  font-family: 'Montserrat', sans-serif;
-  font-size: 12px;
-  font-weight: 600;
-  letter-spacing: 1px;
-  background: linear-gradient(115deg, #d96da7, #a75ce8);
-  box-shadow: 0 10px 28px rgba(180, 80, 150, .25);
-  transition: transform .3s ease, box-shadow .3s ease;
-}
-
-.video-btn:hover {
-  transform: translateY(-3px) scale(1.03);
-  box-shadow: 0 16px 35px rgba(180, 80, 150, .35);
-}
-
-.video-container {
-  display: none;
-  margin-top: 24px;
-  animation: videoAppear .6s ease forwards;
-}
-
-.video-container.show {
-  display: block;
-}
-
-.video-container video {
-  width: 100%;
-  max-width: 650px;
-  border-radius: 16px;
-  box-shadow: 0 20px 45px rgba(0,0,0,.25);
-}
-
-@keyframes videoAppear {
-  from {
-    opacity: 0;
-    transform: translateY(15px);
-  }
-
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
     /* =========================================================
        RESPONSIVE
     ========================================================= */
@@ -1181,14 +1115,6 @@ Si tienes curiosidad, entra y descúbrelo. 🎁✨
                 merecía algo más especial. Sé que estamos lejos y que esta vez no puedo estar ahí para darle un abrazo, invitarla a comer algo, 
                 darle un detalle o simplemente sentarme un rato a hablar con usted. Y créame que me hubiera gustado. Pero como no puedo hacerlo 
                 de esa manera, quise buscar otra forma de estar presente, aunque fuera con unas palabras desde Colombia hasta Italia. ❤️
-
-
-
-                
-                Espero que esta nueva etapa venga con muchas cosas buenas, momentos que te hagan sonreír de verdad, 
-                nuevas experiencias y personas que aporten cosas bonitas a tu vida. <span class="highlight"> Deseo que poco a 
-                poco muchos de esos sueños que tienes se vayan haciendo realidad y puedas seguir construyendo la vida que 
-                quieres para ti.</span>
                 
               </p>
 
@@ -1205,8 +1131,9 @@ Si tienes curiosidad, entra y descúbrelo. 🎁✨
               </p>
               
               <p>
-              No le voy a escribir una carta toda triste ni a ponerme sentimental de más 😂. Sí, me extendí un poco, pero era mi intención 
-              expresar las cosas. Además, hoy no se trata de eso. Hoy se trata de celebrara!!!!🥳
+
+                <span class="highlight"> No le voy a escribir una carta toda triste ni a ponerme sentimental de más 😂. Sí, me extendí un poco, pero era mi intención 
+              expresar lo que senti. Además, hoy no se trata de eso. Hoy se trata de celebrara!!!!🥳.</span>
 
               </p>
               
@@ -1830,19 +1757,9 @@ Si tienes curiosidad, entra y descúbrelo. 🎁✨
     }
 
     const openVideoBtn = document.getElementById('openVideoBtn');
-const videoContainer = document.getElementById('videoContainer');
-const specialVideo = document.getElementById('specialVideo');
 
 openVideoBtn.addEventListener('click', () => {
-
-  videoContainer.classList.add('show');
-
-  openVideoBtn.style.display = 'none';
-
-  setTimeout(() => {
-    specialVideo.play();
-  }, 300);
-
+  window.location.href = 'https://www.youtube.com/watch?v=WX0Ff2AWhF8&list=RDWX0Ff2AWhF8&start_radio=1';
 });
   </script>
 </body>
