@@ -984,7 +984,7 @@
                 background: linear-gradient(115deg, #d96da7, #a75ce8); 
                 box-shadow: 0 10px 28px rgba(180, 80, 150, .25); 
                 transition: transform .3s ease, box-shadow .3s ease; } 
-    .video-btn:hover { transform: translateY(-3px) scale(1.03); box-shadow: 0 16px 35px rgba(180, 80, 150, .35); }
+    .video-btn:hover { transform: translateY(-3px) scale(1.03); box-shadow: 0 16px 35px rgba(180, 80, 150, .35); 
     
     }
 
@@ -1187,16 +1187,9 @@ Si tienes curiosidad, entra y descúbrelo. 🎁✨
 <div class="video-surprise">
   <p>Hay algo más que quería compartir contigo... ✨</p>
 
-  <button class="video-btn" id="openVideoBtn">
+  <button class="video-btn" id="openVideoBtn" type="button">
     ▶ Ver el video
   </button>
-
-  <div class="video-container" id="videoContainer">
-    <video id="specialVideo" controls preload="metadata">
-      <source src="lost-and-found.mp4" type="video/mp4">
-      Tu navegador no puede reproducir este video.
-    </video>
-  </div>
 </div>
             <div class="letter-footer">Hecho desde Colombia con mucho cariño</div>
             <button class="replay-btn" id="replayBtn">Ver la celebración otra vez</button>
@@ -1776,10 +1769,14 @@ Si tienes curiosidad, entra y descúbrelo. 🎁✨
       });
     }
 
-    const openVideoBtn = document.getElementById('openVideoBtn');
+const openVideoBtn = document.getElementById('openVideoBtn');
 
 openVideoBtn.addEventListener('click', () => {
-  window.location.href = 'https://www.youtube.com/watch?v=WX0Ff2AWhF8&list=RDWX0Ff2AWhF8&start_radio=1';
+  window.open(
+    'https://www.youtube.com/watch?v=WX0Ff2AWhF8',
+    '_blank',
+    'noopener,noreferrer'
+  );
 });
   </script>
 </body>
