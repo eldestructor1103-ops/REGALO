@@ -968,6 +968,72 @@
       to { height: 14px; }
     }
 
+    /* VIDEO SORPRESA */
+.video-surprise {
+  position: relative;
+  z-index: 2;
+  margin: 32px auto 0;
+  text-align: center;
+  max-width: 610px;
+}
+
+.video-surprise p {
+  margin-bottom: 15px;
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 20px;
+  font-style: italic;
+  color: #9a5c7a;
+}
+
+.video-btn {
+  border: none;
+  padding: 14px 28px;
+  border-radius: 999px;
+  cursor: pointer;
+  color: white;
+  font-family: 'Montserrat', sans-serif;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 1px;
+  background: linear-gradient(115deg, #d96da7, #a75ce8);
+  box-shadow: 0 10px 28px rgba(180, 80, 150, .25);
+  transition: transform .3s ease, box-shadow .3s ease;
+}
+
+.video-btn:hover {
+  transform: translateY(-3px) scale(1.03);
+  box-shadow: 0 16px 35px rgba(180, 80, 150, .35);
+}
+
+.video-container {
+  display: none;
+  margin-top: 24px;
+  animation: videoAppear .6s ease forwards;
+}
+
+.video-container.show {
+  display: block;
+}
+
+.video-container video {
+  width: 100%;
+  max-width: 650px;
+  border-radius: 16px;
+  box-shadow: 0 20px 45px rgba(0,0,0,.25);
+}
+
+@keyframes videoAppear {
+  from {
+    opacity: 0;
+    transform: translateY(15px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
     /* =========================================================
        RESPONSIVE
     ========================================================= */
@@ -976,6 +1042,7 @@
     @media (prefers-reduced-motion: reduce) {
       *, *::before, *::after { animation-duration: .001ms !important; animation-iteration-count: 1 !important; scroll-behavior: auto !important; }
     }
+  
   </style>
 </head>
 
@@ -1138,7 +1205,20 @@ Si tienes curiosidad, entra y descúbrelo. 🎁✨
               Con cariño,<br>
               <strong>El Inge Jhojan✨</strong>
             </div>
+<div class="video-surprise">
+  <p>Hay algo más que quería compartir contigo... ✨</p>
 
+  <button class="video-btn" id="openVideoBtn">
+    ▶ Ver el video
+  </button>
+
+  <div class="video-container" id="videoContainer">
+    <video id="specialVideo" controls preload="metadata">
+      <source src="lost-and-found.mp4" type="video/mp4">
+      Tu navegador no puede reproducir este video.
+    </video>
+  </div>
+</div>
             <div class="letter-footer">Hecho desde Colombia con mucho cariño</div>
             <button class="replay-btn" id="replayBtn">Ver la celebración otra vez</button>
             <button class="back-btn" id="backBtn">← Volver a la página de entrada</button>
@@ -1716,6 +1796,22 @@ Si tienes curiosidad, entra y descúbrelo. 🎁✨
         gsap.to('.nebula.two', { x: -x * 16, y: -y * 12, duration: 1.5, overwrite: 'auto' });
       });
     }
+
+    onst openVideoBtn = document.getElementById('openVideoBtn');
+const videoContainer = document.getElementById('videoContainer');
+const specialVideo = document.getElementById('specialVideo');
+
+openVideoBtn.addEventListener('click', () => {
+
+  videoContainer.classList.add('show');
+
+  openVideoBtn.style.display = 'none';
+
+  setTimeout(() => {
+    specialVideo.play();
+  }, 300);
+
+});
   </script>
 </body>
 </html>
