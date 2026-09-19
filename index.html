@@ -173,16 +173,29 @@
     }
 
     .welcome-title {
-        position: relative;
+  position: relative;
   font-family: 'Cormorant Garamond', serif;
   font-size: clamp(3.25rem, 12vw, 8.6rem);
   font-weight: 500;
   line-height: 1;
   letter-spacing: clamp(-2px, -.35vw, -3px);
   text-shadow: 0 0 45px rgba(255,123,190,.22);
-    }
+}
 
-    .welcome-title span {
+/* Frase pequeña */
+.welcome-title .welcome-subtitle {
+  display: block;
+  font-family: 'Cormorant Garamond', serif;
+  font-size: clamp(1.2rem, 3vw, 2rem);
+  line-height: 1.3;
+  letter-spacing: 0;
+  margin-bottom: 15px;
+  color: #fff;
+  text-shadow: none;
+}
+
+/* Título principal */
+.welcome-title .welcome-main {
   display: block;
   font-family: 'Great Vibes', cursive;
   font-size: 0.85em;
@@ -196,7 +209,7 @@
   background-clip: text;
   color: transparent;
   animation: titleShine 5s linear infinite;
-    }
+}
 
     @keyframes titleShine {
       from { background-position: 0% 50%; }
@@ -1169,11 +1182,15 @@
       <div class="welcome-card" id="welcomeCard">
         <div class="date-top">24 · septiembre · 2026</div>
 
-        <h1 class="welcome-title">
-          Un pequeño detalle para usted ✨
-          <span>Feliz Día</span>
-        </h1>
+   <h1 class="welcome-title">
+  <span class="welcome-subtitle">
+    Un pequeño detalle para usted ✨
+  </span>
 
+  <span class="welcome-main">
+    Feliz Día
+  </span>
+</h1>
         <p class="welcome-text">
           Hoy es un dia muy especial 🎁😋 Lo hice con cariño y 
           espero que le guste. 😊
